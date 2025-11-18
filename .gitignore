@@ -1,0 +1,32 @@
+# Gradle build
+.gradle/
+build/
+out/
+
+# Kotlin/Java compiled files
+*.class
+*.jar
+*.war
+*.ear
+
+# Gradle wrapper
+gradle/wrapper/gradle-wrapper.jar
+gradle.properties
+
+#IDEs
+#IntelliJ Idea
+.idea/
+*.iml
+*.iws
+*.ipr
+
+#VS Code
+.vscode/
+
+# OS-Specific
+.DS_Store
+Thumbs.db
+
+# Logs and Temporary
+*.log
+tmp/
