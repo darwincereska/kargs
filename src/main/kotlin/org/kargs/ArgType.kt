@@ -49,7 +49,7 @@ sealed class ArgType<T>(val typeName: String) {
     /**
      * Create a constrained integer type with min/max bounds
      */
-    class IntRange(private val min: kotlin.Int, private val max: kotlin.Int) : ArgType<kotlin.Int>("Int") {
+    class IntRange(val min: kotlin.Int, val max: kotlin.Int) : ArgType<kotlin.Int>("Int") {
         override fun convert(value: String): kotlin.Int {
             val intValue = value.toIntOrNull() ?: throw ArgumentParseException("`$value` is not a valid integer")
             if (intValue !in min..max) {
@@ -64,7 +64,7 @@ sealed class ArgType<T>(val typeName: String) {
     /**
      * Create an enum type from list of valid choices
      */
-    class Choice(private val choices: List<kotlin.String>) : ArgType<kotlin.String>("Choice") {
+    class Choice(val choices: List<kotlin.String>) : ArgType<kotlin.String>("Choice") {
         override fun convert(value: String): kotlin.String {
             if (value !in choices) {
                 throw ArgumentParseException("`$value` is not a valid choice. Valid options: ${choices.joinToString(", ")}")

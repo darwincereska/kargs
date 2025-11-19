@@ -47,7 +47,8 @@ abstract class Subcommand(
      * Print help information for this subcommand
      */
     fun printHelp() {
-        println("Usage: $name [options]${if (arguments.isNotEmpty()) " ${arguments.joinToString(" ") { "<${it.name}>" }}" else ""}")
+        println("Usage: $name [options]${if (arguments.isNotEmpty()) " ${arguments.joinToString(" ") { if (it.required) "<${it.name}>" else "[${it.name}]" }}" else ""}")
+
         if (description.isNotEmpty()) {
             println()
             println(description)
@@ -60,7 +61,9 @@ abstract class Subcommand(
                 val shortName = option.shortName?.let { "-$it, " } ?: "    "
                 val required = if (option.required) " (required)" else ""
                 val defaultVal = option.getValueOrDefault()?.let { " [default: $it]" } ?: ""
-                println("  $shortName--${option.longName}")
+                val typeInfo = getTypeInfo(option.type)
+
+                println("  $shortName--${option.longName}${typeInfo}")
                 option.description?.let { desc ->
                     println("        $desc$required$defaultVal")
                 }
@@ -84,7 +87,8 @@ abstract class Subcommand(
             println("Arguments:")
             arguments.forEach { arg ->
                 val required = if (arg.required) " (required)" else " (optional)"
-                println("  ${arg.name}$required")
+                val typeInfo = getTypeInfo(arg.type)
+                println("  ${arg.name}$typeInfo$required")
                 arg.description?.let { desc ->
                     println("    $desc")
                 }
@@ -106,5 +110,19 @@ abstract class Subcommand(
         }
 
         return errors
+    }
+
+    /**
+     * Type info helper method
+     */
+    private fun getTypeInfo(type: ArgType<*>): String {
+        return when (type) {
+            is ArgType.StringType -> ""
+            is ArgType.IntType -> " <int>"
+            is ArgType.DoubleType -> " <double>"
+            is ArgType.BooleanType -> " <bool>"
+            is ArgType.IntRange -> " <${type.min}-${type.max}>"
+            is ArgType.Choice -> " <${type.choices.joinToString("|")}>"
+        }
     }
 }

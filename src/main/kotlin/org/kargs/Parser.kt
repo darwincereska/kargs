@@ -32,12 +32,6 @@ class Parser(
             return
         }
 
-        // Check for global help
-        if (args.contains("--help") || args.contains("-h")) {
-            printGlobalHelp()
-            return
-        }
-
         val cmdName = args[0]
         val cmd = findCommand(cmdName)
 
@@ -49,7 +43,7 @@ class Parser(
             return
         }
 
-        // Check for command specific help
+        // Check for help, global or command
         if (args.contains("--help") || args.contains("-h")) {
             cmd.printHelp()
             return
@@ -60,9 +54,8 @@ class Parser(
             validateRequiredOptions(cmd)
             cmd.execute()
         } catch (e: ArgumentParseException) {
-            printError(e.message ?: "Parse error")
-            cmd.printHelp()
-            throw e
+            handleParseError(e, cmd)
+            throw e 
         }
     }
 
@@ -225,9 +218,22 @@ class Parser(
      */
     private fun validateRequiredOptions(cmd: Subcommand) {
         val missingRequired = cmd.options.filter { it.required && it.value == null }
+        val missingArgs = cmd.arguments.filter { it.required && it.value == null }
+
+        val errors = mutableListOf<String>()
+
         if (missingRequired.isNotEmpty()) {
             val missing = missingRequired.joinToString(", ") { "--${it.longName}" }
-            throw ArgumentParseException("Missing required options: $missing")
+            errors.add("Missing required options: $missing")
+        }
+
+        if (missingArgs.isNotEmpty()) {
+            val missing = missingArgs.joinToString(", ") { it.name }
+            errors.add("Missing required arguments: $missing")
+        }
+
+        if (errors.isNotEmpty()) {
+            throw ArgumentParseException(errors.joinToString(", "))
         }
     }
 
@@ -283,6 +289,24 @@ class Parser(
         GREEN("\u001B[32m"),
         YELLOW("\u001B[33m"),
         BOLD("\u001B[1m")
+    }
+
+    /**
+     * Handles parse errors
+     *
+     * @throw ArgumentParseException if in debug mode
+     */
+    private fun handleParseError(e: ArgumentParseException, cmd: Subcommand) {
+        printError(e.message ?: "Parse error")
+        cmd.printHelp()
+
+        // Only show stack trace in debug mode
+        if (System.getProperty("debug") == "true") {
+            e.printStackTrace()
+        }
+
+        // Exit gracefully instead of throwing
+        // kotlin.system.exitProcess(1)
     }
 }
 
