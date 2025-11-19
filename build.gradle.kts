@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "org.kargs"
-version = "1.0.3"
+version = "1.0.4"
 
 repositories {
     mavenCentral()
@@ -12,8 +12,8 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"))
-    implementation(kotlin("stdlib"))
-    implementation(kotlin("reflect"))
+    // implementation(kotlin("stdlib"))
+    // implementation(kotlin("reflect"))
 
     // JUnit 5 testing dependencies
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
@@ -68,3 +68,4 @@ mavenPublishing {
         }
     }
 }
+

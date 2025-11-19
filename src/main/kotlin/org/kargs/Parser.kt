@@ -108,6 +108,7 @@ class Parser(
     private fun parseLongOption(cmd: Subcommand, key: String, args: Array<String>, index: Int): Int {
         val option = cmd.options.firstOrNull { it.longName == key }
         val flag = cmd.flags.firstOrNull { it.longName == key }
+        val optionalOption = cmd.optionalOptions.firstOrNull { it.longName == key }
 
         return when {
             option != null -> {
@@ -122,6 +123,18 @@ class Parser(
                 }
             }
 
+            optionalOption != null -> {
+                // Check if next arg exists and doesn't start with -
+                if (index + 1 < args.size && !args[index + 1].startsWith("-")) {
+                    // Has value
+                    optionalOption.parseValue(args[index + 1])
+                    index + 1
+                } else {
+                    // Used as flag
+                    optionalOption.setAsFlag()
+                    index
+                }
+            }
             flag != null -> {
                 flag.setFlag()
                 index

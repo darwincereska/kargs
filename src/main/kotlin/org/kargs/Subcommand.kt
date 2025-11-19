@@ -16,6 +16,7 @@ abstract class Subcommand(
     private val _options = mutableListOf<Option<*>>()
     private val _flags = mutableListOf<Flag>()
     private val _arguments = mutableListOf<Argument<*>>()
+    private val _optionalOptions = mutableListOf<OptionalOption>()
 
     init {
         require(name.isNotBlank()) { "Subcommand name cannot be blank" }
@@ -30,6 +31,7 @@ abstract class Subcommand(
             is Option<*> -> _options += prop
             is Flag -> _flags += prop
             is Argument<*> -> _arguments += prop
+            is OptionalOption -> _optionalOptions += prop
         }
     }
 
@@ -37,6 +39,7 @@ abstract class Subcommand(
     val options: List<Option<*>> get() = _options
     val flags: List<Flag> get() = _flags
     val arguments: List<Argument<*>> get() = _arguments
+    val optionalOptions: List<OptionalOption> get() = _optionalOptions
 
     /**
      * Execute this subcommand - must be implemented by subclasses
@@ -66,6 +69,18 @@ abstract class Subcommand(
                 println("  $shortName--${option.longName}${typeInfo}")
                 option.description?.let { desc ->
                     println("        $desc$required$defaultVal")
+                }
+            }
+        }
+
+        if (optionalOptions.isNotEmpty()) {
+            println()
+            println("Optional Value Options:")
+            optionalOptions.forEach { option ->
+                val shortName = option.shortName?.let { "-$it, " } ?: "    "
+                println("  $shortName--${option.longName} [value]")
+                option.description?.let { desc ->
+                    println("        $desc (can be used as flag or with value)")
                 }
             }
         }
@@ -117,12 +132,13 @@ abstract class Subcommand(
      */
     private fun getTypeInfo(type: ArgType<*>): String {
         return when (type) {
-            is ArgType.StringType -> ""
+            is ArgType.StringType -> " <string>"
             is ArgType.IntType -> " <int>"
             is ArgType.DoubleType -> " <double>"
             is ArgType.BooleanType -> " <bool>"
             is ArgType.IntRange -> " <${type.min}-${type.max}>"
             is ArgType.Choice -> " <${type.choices.joinToString("|")}>"
+            is ArgType.OptionalValue -> " [string]"
         }
     }
 }

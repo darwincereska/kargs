@@ -75,6 +75,15 @@ sealed class ArgType<T>(val typeName: String) {
         override fun getValidationDescription(): String = "one of: ${choices.joinToString(", ")}"
     }
 
+    /**
+     * Optional value type - can be used as flag or with value
+     */
+    class OptionalValue(val defaultWhenPresent: String = "true") : ArgType<String>("OptionalValue") {
+        override fun convert(value: String): String = value
+
+        override fun getValidationDescription(): String = "optional value or flag"
+    }
+
     companion object {
         val String: ArgType<kotlin.String> = StringType
         val Int: ArgType<kotlin.Int> = IntType
@@ -90,5 +99,10 @@ sealed class ArgType<T>(val typeName: String) {
          * Create a choice type from valid options
          */
         fun choice(vararg options: kotlin.String) = Choice(options.toList())
+
+        /**
+         * Create an optional value or flag
+         */
+        fun optionalValue(defaultWhenPresent: String = "true") = OptionalValue(defaultWhenPresent)
     }
 }
