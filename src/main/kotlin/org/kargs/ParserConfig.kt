@@ -9,7 +9,11 @@ data class ParserConfig(
     val helpOnEmpty: Boolean = true, // Show help when no args provided
     val caseSensitive: Boolean = true,
     val allowAbbreviations: Boolean = false, // Allow partial option matching
-    val programVersion: String? = null // Adds --version and -v flag if set
+    val programVersion: String? = null, // Adds --version and -v flag if set
+
+    // Optional customize version flag names
+    val versionLongName: String = "version",
+    val versionShortName: String = "V" // Capital V to avoid conflicts with -v (verbose)
 ) {
     companion object {
         val DEFAULT = ParserConfig()

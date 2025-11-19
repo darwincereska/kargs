@@ -25,6 +25,10 @@ class Parser(
      * @param args Array of command-line arguments
      */
     fun parse(args: Array<String>) {
+        if (handleVersionFlag(args)) {
+            return // Exit after showing version
+        }
+
         if (args.isEmpty()) {
             if (config.helpOnEmpty) {
                 printGlobalHelp()
@@ -254,7 +258,8 @@ class Parser(
      * Print global help menu
      */
     private fun printGlobalHelp() {
-        println(colorize("Usage: $programName <command> [options]", Color.BOLD))
+        val versionInfo = config.programVersion?.let { " (v$it)" } ?: ""
+        println(colorize("Usage: $programName$versionInfo <command> [options]", Color.BOLD))
         println()
         println(colorize("Commands:", Color.BOLD))
         commands.forEach { cmd -> 
@@ -320,6 +325,31 @@ class Parser(
 
         // Exit gracefully instead of throwing
         // kotlin.system.exitProcess(1)
+    }
+
+    /**
+     * Check if version flag is present and handle it
+     */
+    private fun handleVersionFlag(args: Array<String>): Boolean {
+        if (config.programVersion == null) return false
+
+        val versionFlags = listOf("--${config.versionLongName}", "-${config.versionShortName}")
+
+        if (args.any { it in versionFlags }) {
+            printVersion()
+            return true // Indicates version was shown, should exit
+        }
+
+        return false
+    }
+
+    /**
+     * Print version information
+     */
+    private fun printVersion() {
+        config.programVersion?.let { version -> 
+            println("$programName version $version")
+        }
     }
 }
 

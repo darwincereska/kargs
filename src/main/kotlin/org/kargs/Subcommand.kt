@@ -139,6 +139,7 @@ abstract class Subcommand(
             is ArgType.IntRange -> " <${type.min}-${type.max}>"
             is ArgType.Choice -> " <${type.choices.joinToString("|")}>"
             is ArgType.OptionalValue -> " [string]"
+            is ArgType.FilePath -> " <path>"
         }
     }
 }

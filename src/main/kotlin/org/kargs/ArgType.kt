@@ -1,5 +1,7 @@
 package org.kargs
 
+import java.io.File
+
 /**
  * Sealed class representing different argument types with conversion and validation logic
  */
@@ -84,6 +86,42 @@ sealed class ArgType<T>(val typeName: String) {
         override fun getValidationDescription(): String = "optional value or flag"
     }
 
+    /**
+     * File path type with existence and permision validation
+     */
+    class FilePath(
+        val mustExist: Boolean = false,
+        val mustBeFile: Boolean = false,
+        val mustBeDirectory: Boolean = false,
+        val mustBeReadable: Boolean = false,
+        val mustBeWritable: Boolean = false
+    ) : ArgType<File>("File") {
+        override fun convert(value: String): File = File(value)
+
+        override fun validate(value: File): Boolean {
+            return when {
+                mustExist && !value.exists() -> false
+                mustBeFile && !value.isFile -> false
+                mustBeDirectory && !value.isDirectory -> false
+                mustBeReadable && !value.canRead() -> false
+                mustBeWritable && !value.canWrite() -> false
+                else -> true
+            }        
+        }
+
+        override fun getValidationDescription(): String {
+            val conditions = mutableListOf<String>()
+            if (mustExist) conditions.add("must exist")
+            if (mustBeFile) conditions.add("must be a file")
+            if (mustBeDirectory) conditions.add("must be a directory")
+            if (mustBeReadable) conditions.add("must be readable")
+            if (mustBeWritable) conditions.add("must be writable")
+
+            return if (conditions.isEmpty()) "file path" else "file path (${conditions.joinToString(", ")})"
+        }
+    }
+
+
     companion object {
         val String: ArgType<kotlin.String> = StringType
         val Int: ArgType<kotlin.Int> = IntType
@@ -104,5 +142,30 @@ sealed class ArgType<T>(val typeName: String) {
          * Create an optional value or flag
          */
         fun optionalValue(defaultWhenPresent: String = "true") = OptionalValue(defaultWhenPresent)
+
+        /**
+         * File that must exist and be a regular file
+         */
+        fun existingFile() = FilePath(mustExist = true, mustBeFile = true)
+
+        /**
+         * Directory that must exist
+         */
+        fun existingDirectory() = FilePath(mustExist = true, mustBeDirectory = true)
+
+        /**
+         * File that must exist and be readable
+         */
+        fun readableFile() = FilePath(mustExist = true, mustBeFile = true, mustBeReadable = true)
+
+        /**
+         * File that must be writable (can be created if doesn't exist)
+         */
+        fun writableFile() = FilePath(mustBeWritable = true)
+
+        /**
+         * Any file path (no validation)
+         */
+        fun filePath() = FilePath()
     }
 }
