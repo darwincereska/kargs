@@ -1,26 +1,40 @@
 package org.kargs
 
-import kotlin.properties.ReadWriteProperty
-import kotlin.reflect.KProperty
-
+/**
+ * Represents a positional command-line argument
+ *
+ * @param type The type converter for this argument's value
+ * @param name The name of this argument (used in help)
+ * @param description Help text for this argument
+ * @param required Whether this argument must be provided
+ */
 class Argument<T>(
     val type: ArgType<T>,
     val name: String,
-    val description: String = "",
+    description: String? = null,
     val required: Boolean = true
-) : ReadWriteProperty<Any?, T?> {
+) : KargsProperty<T>(description) {
+    init {
+        require(name.isNotBlank()) { "Argument name cannot be blank" }
+    }
 
-    private var _value: T? = null
+    override fun parseValue(str: String) {
+        value = type.convert(str)
+    }
 
-    var value: T?
-    get() = _value
-    set(v) { _value = v }
+    override fun isValid(): Boolean {
+        return if (required) {
+            value != null && type.validate(value!!)
+        } else {
+            value?.let { type.validate(it) } ?: true
+        }
+    }
 
-    override fun getValue(thisRef: Any?, property: KProperty<*>): T? = _value
-    override fun setValue(thisRef: Any?, property: KProperty<*>, value: T?) { _value = value }
-
-    fun parseValue(input: String) {
-        _value = type.convert(input)
+    override fun getValidationError(): String? {
+        return when {
+            required && value == null -> "Argument '$name' is required"
+            value != null && !type.validate(value!!) -> "Invalid value for argument '$name': expected ${type.getValidationDescription()}"
+            else -> null
+        }
     }
 }
-

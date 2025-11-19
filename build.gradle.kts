@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "org.kargs"
-version = "1.0.0"
+version = "1.0.2"
 
 repositories {
     mavenCentral()
@@ -13,7 +13,27 @@ repositories {
 dependencies {
     testImplementation(kotlin("test"))
     implementation(kotlin("stdlib"))
-    implementation("org.jetbrains.kotlin:kotlin-reflect:2.2.21")
+    implementation(kotlin("reflect"))
+
+    // JUnit 5 testing dependencies
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.10.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.0")
+    testImplementation(kotlin("test"))
+    
+    // For assertions
+    testImplementation("org.assertj:assertj-core:3.24.2")
+}
+
+tasks.test {
+    useJUnitPlatform()
+    
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = true
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
+ 
 }
 
 mavenPublishing {
