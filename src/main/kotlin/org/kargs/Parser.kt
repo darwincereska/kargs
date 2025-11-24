@@ -48,13 +48,18 @@ class Parser(
         }
 
         // Check for help, global or command
-        if (args.contains("--help") || args.contains("-h")) {
+        if ("--help" in args || "-h" in args) {
             cmd.printHelp()
             return
         }
 
+        // Check for no-color
+        if ("--no-color" in args) {
+            Colors.setGlobalColorsEnabled(true)
+        } 
+
         try {
-            parseCommandArgs(cmd, args.sliceArray(1 until args.size))
+            parseCommandArgs(cmd, args.sliceArray(1 ..< args.size))
             validateRequiredOptions(cmd)
             cmd.execute()
         } catch (e: ArgumentParseException) {
@@ -71,7 +76,7 @@ class Parser(
         return commands.firstOrNull { cmd -> 
             val cmdName = if (config.caseSensitive) cmd.name else cmd.name.lowercase()
             val aliases = if (config.caseSensitive) cmd.aliases else cmd.aliases.map { it.lowercase() }
-            cmdName == searchName || aliases.contains(searchName)
+            cmdName == searchName || searchName in aliases || searchName == "help" || searchName == "no-color"
         }
     }
 
@@ -163,10 +168,13 @@ class Parser(
         if (key.length > 1) {
             key.forEach { char -> 
                 val flag = cmd.flags.firstOrNull { it.shortName == char.toString() }
-                if (flag != null) {
-                    flag.setFlag()
-                } else if (config.strictMode) {
-                    throw ArgumentParseException("Unknown flag -$char")
+                val optionalOption = cmd.optionalOptions.firstOrNull { it.shortName == char.toString() }
+
+                when {
+                    flag != null -> flag.setFlag()
+                    optionalOption != null -> optionalOption.setAsFlag()
+                    config.strictMode -> throw ArgumentParseException("Unknown flag -$char")
+                    else -> printWarning("Unknown flag -$char")
                 }
             }
             return index
@@ -174,6 +182,7 @@ class Parser(
 
         val option = cmd.options.firstOrNull { it.shortName == key }
         val flag = cmd.flags.firstOrNull { it.shortName == key }
+        val optionalOption = cmd.optionalOptions.firstOrNull { it.shortName == key }
 
         return when {
             option != null -> {
@@ -185,6 +194,19 @@ class Parser(
                     index + 1
                 } catch (e: Exception) {
                     throw ArgumentParseException("Invalid value for option -$key: ${e.message}")
+                }
+            }
+
+            optionalOption != null -> {
+                // Check if next arg exists and doesn't start with -
+                if (index + 1 < args.size && !args[index + 1].startsWith("-")) {
+                    // Has value
+                    optionalOption.parseValue(args[index + 1])
+                    index + 1
+                } else {
+                    // Used as flag
+                    optionalOption.setAsFlag()
+                    index
                 }
             }
 
@@ -258,16 +280,17 @@ class Parser(
      * Print global help menu
      */
     private fun printGlobalHelp() {
-        val versionInfo = config.programVersion?.let { " (v$it)" } ?: ""
-        println(colorize("Usage: $programName$versionInfo <command> [options]", Color.BOLD))
+        val versionInfo = config.programVersion?.let { " ${Colors.dimBlue("(v$it)")}" } ?: ""
+        println(Colors.boldWhite("Usage: $programName$versionInfo <command> [options]"))
         println()
-        println(colorize("Commands:", Color.BOLD))
+        println(Colors.boldWhite("Commands:"))
         commands.forEach { cmd -> 
             val aliases = if (cmd.aliases.isNotEmpty()) " (${cmd.aliases.joinToString(", ")})" else ""
-            println("  ${colorize(cmd.name, Color.GREEN)}$aliases")
+            println("  ${cmd.name}${Colors.dimBlue(aliases)}")
             if (cmd.description.isNotEmpty()) {
-                println("    ${cmd.description}")
+                println(Colors.dimMagenta("    ${cmd.description}"))
             }
+            println()
         }
         println()
         println("Use `$programName <command> --help` for more information about a command.")
@@ -277,36 +300,14 @@ class Parser(
      * Print error message with optional coloring
      */
     private fun printError(message: String) {
-        println(colorize("Error: $message", Color.RED))
+        println(Colors.error("Error: $message"))
     }
 
     /**
      * Print warning message with optional coloring
      */
     private fun printWarning(message: String) {
-        println(colorize("Warning: $message", Color.YELLOW))
-    }
-
-    /**
-     * Apply color to text if colors are enabled
-     */
-    private fun colorize(text: String, color: Color): String {
-        return if (config.colorsEnabled) {
-            "${color.code}$text${Color.RESET.code}"
-        } else {
-            text
-        }
-    }
-
-    /**
-     * ANSI color codes for terminal output
-     */
-    private enum class Color(val code: String) {
-        RESET("\u001B[0m"),
-        RED("\u001B[31m"),
-        GREEN("\u001B[32m"),
-        YELLOW("\u001B[33m"),
-        BOLD("\u001B[1m")
+        println(Colors.warn("Warning: $message"))
     }
 
     /**

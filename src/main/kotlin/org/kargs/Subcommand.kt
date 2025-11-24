@@ -50,63 +50,67 @@ abstract class Subcommand(
      * Print help information for this subcommand
      */
     fun printHelp() {
-        println("Usage: $name [options]${if (arguments.isNotEmpty()) " ${arguments.joinToString(" ") { if (it.required) "<${it.name}>" else "[${it.name}]" }}" else ""}")
+        println(Colors.boldWhite("Usage: $name ${"[options]"}${if (arguments.isNotEmpty()) " ${arguments.joinToString(" ") { if (it.required) "<${it.name}>" else "[${it.name}]" }}" else ""}"))
 
         if (description.isNotEmpty()) {
             println()
-            println(description)
+            println(Colors.boldMagenta(description))
         }
 
         if (options.isNotEmpty()) {
             println()
-            println("Options:")
+            println(Colors.boldWhite("Options:"))
             options.forEach { option ->
                 val shortName = option.shortName?.let { "-$it, " } ?: "    "
-                val required = if (option.required) " (required)" else ""
-                val defaultVal = option.getValueOrDefault()?.let { " [default: $it]" } ?: ""
-                val typeInfo = getTypeInfo(option.type)
+                val required = if (option.required) Colors.dimBlue(" (required)") else ""
+                val defaultVal = option.getValueOrDefault()?.let { Colors.boldBlue(" [default: $it]") } ?: ""
+                val typeInfo = Colors.yellow(getTypeInfo(option.type))
 
                 println("  $shortName--${option.longName}${typeInfo}")
                 option.description?.let { desc ->
-                    println("        $desc$required$defaultVal")
+                    println(Colors.dimMagenta("        $desc$required$defaultVal"))
                 }
+                println()
             }
         }
 
         if (optionalOptions.isNotEmpty()) {
             println()
-            println("Optional Value Options:")
+            println(Colors.boldWhite("Optional Value Options:"))
             optionalOptions.forEach { option ->
                 val shortName = option.shortName?.let { "-$it, " } ?: "    "
                 println("  $shortName--${option.longName} [value]")
                 option.description?.let { desc ->
-                    println("        $desc (can be used as flag or with value)")
+                    println(Colors.dimMagenta("        $desc (can be used as flag or with value)"))
                 }
+                println()
             }
         }
 
         if (flags.isNotEmpty()) {
             println()
-            println("Flags:")
+            println(Colors.boldWhite("Flags:"))
             flags.forEach { flag ->
                 val shortName = flag.shortName?.let { "-$it, " } ?: "    "
                 println("  $shortName--${flag.longName}")
                 flag.description?.let { desc ->
-                    println("        $desc")
+                    println(Colors.dimMagenta("        $desc"))
                 }
+                println()
             }
         }
 
         if (arguments.isNotEmpty()) {
             println()
-            println("Arguments:")
+            println(Colors.boldWhite("Arguments:"))
             arguments.forEach { arg ->
-                val required = if (arg.required) " (required)" else " (optional)"
-                val typeInfo = getTypeInfo(arg.type)
+                val required = Colors.dimBlue(if (arg.required) " (required)" else " (optional)")
+                val typeInfo = Colors.yellow(getTypeInfo(arg.type))
                 println("  ${arg.name}$typeInfo$required")
                 arg.description?.let { desc ->
-                    println("    $desc")
+                    println(Colors.dimMagenta("    $desc"))
                 }
+                println()
             }
         }
     }

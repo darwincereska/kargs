@@ -18,4 +18,8 @@ data class ParserConfig(
     companion object {
         val DEFAULT = ParserConfig()
     }
+
+    init {
+        Colors.setGlobalColorsEnabled(colorsEnabled)
+    }
 }

@@ -80,7 +80,7 @@ sealed class ArgType<T>(val typeName: String) {
     /**
      * Optional value type - can be used as flag or with value
      */
-    class OptionalValue(val defaultWhenPresent: String = "true") : ArgType<String>("OptionalValue") {
+    class OptionalValue(val defaultWhenPresent: String = "true") : ArgType<kotlin.String>("OptionalValue") {
         override fun convert(value: String): String = value
 
         override fun getValidationDescription(): String = "optional value or flag"
@@ -95,7 +95,7 @@ sealed class ArgType<T>(val typeName: String) {
         val mustBeDirectory: Boolean = false,
         val mustBeReadable: Boolean = false,
         val mustBeWritable: Boolean = false
-    ) : ArgType<File>("File") {
+    ) : ArgType<java.io.File>("File") {
         override fun convert(value: String): File = File(value)
 
         override fun validate(value: File): Boolean {
