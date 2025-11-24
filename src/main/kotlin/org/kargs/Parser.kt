@@ -55,7 +55,7 @@ class Parser(
 
         // Check for no-color
         if ("--no-color" in args) {
-            Colors.setGlobalColorsEnabled(true)
+            Colors.setGlobalColorsEnabled(false)
         } 
 
         try {
@@ -76,7 +76,7 @@ class Parser(
         return commands.firstOrNull { cmd -> 
             val cmdName = if (config.caseSensitive) cmd.name else cmd.name.lowercase()
             val aliases = if (config.caseSensitive) cmd.aliases else cmd.aliases.map { it.lowercase() }
-            cmdName == searchName || searchName in aliases || searchName == "help" || searchName == "no-color"
+            cmdName == searchName || searchName in aliases
         }
     }
 
@@ -89,6 +89,9 @@ class Parser(
 
         while (i < args.size) {
             val arg = args[i]
+
+            if ("--help" in arg || "-h" in arg) i++
+            if ("--no-color" in arg) i++
 
             when {
                 arg.startsWith("--") -> {
